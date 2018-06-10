@@ -83,14 +83,25 @@ app.post("/articles/saved", function(req, res) {
 app.get("/articles/:id", function(req, res) {
     db.Article.findOne({
         _id: req.params.id
-    // }).populate("note")
-    }).then(function(dbArticle) {
+    }).populate("note")
+    .then(function(dbArticle) {
         res.json(dbArticle);
         console.log(dbArticle);
     }).catch(function(err) {
         res.json(err);
     });
 });
+
+//Pseudocoding Everything:
+//When SCRAPE is clicked, on the backend: scrape from website and store info into database the send res.json.
+//On front end: grab json sent from server and display on client screen. 
+//When user clicks on article, backend: searches DB for that article and sends json to client side. Frontend: gets response, displays that article and buttons: save & add note & delete note.
+//When SAVE is clicked under ADD NOTE modal after adding notes, it sends saved notes to the server. Server stores in DB. 
+//Need to build a DELETE NOTE button then set up .ajax method DELETE and update on server (delete the note).
+//Also, could use some CSS prettiness. 
+//And, fix the deployment to Heroku. 
+
+
 
 // // Route for saving/updating an Article's associated Note
 // app.post("/articles/:id", function (req, res) {

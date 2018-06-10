@@ -94,13 +94,6 @@ $(document).ready(function() {
         event.preventDefault();
         var thisId = $(this).attr("data-id");
         $.ajax({
-            method: "POST",
-            url: "/articles/saved"
-        }).then (function(data) {
-            res.send(data);
-            console.log(data);
-        });
-        $.ajax({
             method: "GET",
             url: "/articles/" + thisId
         }).then (function(data) {
