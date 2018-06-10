@@ -19,87 +19,78 @@ app.use(express.static("public"));
 
 // Connect to the Mongo DB
 // If deployed, use the deployed database. Otherwise use the local mongoHeadlines database
-// var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
+var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/newsScraper";
 
 // Set mongoose to leverage built in JavaScript ES6 Promises
 // Connect to the Mongo DB
-// mongoose.Promise = Promise;
-// mongoose.connect(MONGODB_URI);
+mongoose.Promise = Promise;
+mongoose.connect(MONGODB_URI);
 
-mongoose.connect("mongodb://localhost/newsScraper");
+// mongoose.connect("mongodb://localhost/newsScraper");
 
 // Routes
 
 // A GET route for scraping the website
-app.get("/api/articles", function (req, res) {
+app.get("/scraped", function (req, res) {
     
     // First, we grab the body of the html with request
     request("http://www.laineygossip.com", function (error, response, html) {
 
-    if (!error && response.statusCode == 200) {
-        var $ = cheerio.load(html);
-        
-        $("article.article-type-standard").each(function (i, element) {
+        if (!error && response.statusCode == 200) {
+            var $ = cheerio.load(html);
+            var result = [];
 
-            var result = {};
-            var a = $(this);
-            result.headline = a.find("h2").text();
-            result.summary = a.find("p").text();
-            result.url = "http://www.laineygossip.com" + a.find("h2").find("a").attr("href");
-
-            console.log(result);
-            res.send(result);
+            $("article.article-type-standard").each(function (i, element) {
+                var article = {};
+                var a = $(this);
+                article.headline = a.find("h2").text();
+                article.summary = a.find("p").text();
+                article.url = "http://www.laineygossip.com" + a.find("h2").find("a").attr("href");
+                result.push({ 
+                    headline: article.headline, 
+                    summary: article.summary, 
+                    url: article.url
+                });
             });
-            
         };
+        console.log('pushed result', result);
+        db.Article.create(result).then(function(dbArticle) {
+            console.log('dbarticle', dbArticle);
+            console.log('result', result);
+        });
+        res.json(result);
     });
 });
 
-// app.post("/api/articles", function (req, res) {
-//     db.Article.create(req.body).then(function (createdArticle) {
-//       res.send(createdArticle);
-//     });
-// });
+app.get("/api/articles/", function(req, res) {
+    db.Article.find({})
+    .then(function(dbArticle) {
+        res.json(dbArticle);
+    }).catch(function(err) {
+        res.json(err);
+    });
+});
 
+app.post("/articles/saved", function(req, res) {
+    db.Article.update({
+        saved: false
+    },
+    {
+        $set: {saved: true}
+    });
+});
 
-            // db.Article.create(result)
-            //     .then(function(dbArticle) {
-            //         console.log(dbArticle);
-            //     })
-            //     .catch(function(err) {
-            //         return res.json(err);
-            //     });
-// // Route for getting all Articles from the db
-// app.get("/articles", function (req, res) {
-//     // Grab every document in the Articles collection
-//     db.Article.find({})
-//         .then(function (dbArticle) {
-//             // If we were able to successfully find Articles, send them back to the client
-//             res.json(dbArticle);
-//         })
-//         .catch(function (err) {
-//             // If an error occurred, send it to the client
-//             res.json(err);
-//         });
-// });
-
-// // Route for grabbing a specific Article by id, populate it with it's note
-// app.get("/articles/:id", function (req, res) {
-//     // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
-//     db.Article.findOne({
-//             _id: req.params.id
-//         })
-//         // ..and populate all of the notes associated with it
-//         .populate("note")
-//         .then(function (dbArticle) {
-//             // If we were able to successfully find an Article with the given id, send it back to the client
-//             res.json(dbArticle);
-//         })
-//         .catch(function (err) {
-//             // If an error occurred, send it to the client
-//             res.json(err);
-//         });
-// });
+app.get("/articles/:id", function(req, res) {
+    db.Article.findOne({
+        _id: req.params.id
+    // }).populate("note")
+    }).then(function(dbArticle) {
+        res.json(dbArticle);
+        console.log(dbArticle);
+    }).catch(function(err) {
+        res.json(err);
+    });
+});
 
 // // Route for saving/updating an Article's associated Note
 // app.post("/articles/:id", function (req, res) {
