@@ -11,3 +11,5 @@ NPM Packages:
 - Cheerio
 
 Unfortunately, this assignment was very tough so I wasn't able to completely finish it; however, this project is something I would like to keep working on so it is fully functional. Also, one of the requirements was to use handlebars, but I didn't get a chance to apply that here or style the site so that is on my to-do list as well. 
+
+in progress...
